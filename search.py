@@ -351,22 +351,19 @@ def biDirectionalSearch(problem):
         # if both frontiers are empty, then goal node is not found, so return null path.
         if startFrontierList.isEmpty() and endFrontierList.isEmpty():
             return []
+
+        # if start frontier is not empty expand it.
+        if not startFrontierList.isEmpty():
             
-        # take out top node from the frontier list.
-        frontierNode = startFrontierList.pop()
+            # take out top node from the frontier list.
+            frontierNode = startFrontierList.pop()
 
-        curNode = frontierNode[0]
+            curNode = frontierNode[0]
 
-        curPath = frontierNode[1]
-
-        if curNode not in startExploredList:
+            curPath = frontierNode[1]
 
             # expanded nodes are added to the explored list.
             startExploredList.add(curNode)
-
-            # if goal was found, then return path.
-            if problem.isGoalState(curNode):
-                return curPath
             
             # if current node is in end visited list then we can combine both path to get final path.
             if curNode in endVisitedList:
@@ -381,6 +378,9 @@ def biDirectionalSearch(problem):
 
                         # reverse end node's path and get final path by combining both paths.
                         finalPath = curPath + endCurPath.reverse()
+
+                        # call isGoalState with goal state to draw expanded states.
+                        problem.isGoalState(problem.goal)
 
                         return finalPath
             
@@ -432,6 +432,9 @@ def biDirectionalSearch(problem):
 
                         # get final path by combining both paths.
                         finalPath = startCurPath + reverseDirections(curPath)
+
+                        # call isGoalState with goal state to draw expanded states.
+                        problem.isGoalState(problem.goal)
 
                         return finalPath
             

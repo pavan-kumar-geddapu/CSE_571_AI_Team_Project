@@ -372,7 +372,9 @@ def biDirectionalSearch(problem):
             if curNode in endVisitedList:
 
                 # find curNode in end frontier list.
-                for (endCurNode, endCurPath) in list(endFrontierList):
+                while not endFrontierList.isEmpty():
+
+                    (endCurNode, endCurPath) = endFrontierList.pop()
 
                     # if we got the matching node append paths.
                     if endCurNode == curNode:
@@ -418,7 +420,9 @@ def biDirectionalSearch(problem):
             if curNode in startVisitedList:
 
                 # find curNode in end frontier
-                for (startCurNode, startCurPath) in list(startFrontierList):
+                while not startFrontierList.isEmpty():
+
+                    (startCurNode, startCurPath) = startFrontierList.pop()
 
                     # if we got the matching node append paths.
                     if startCurNode == curNode:

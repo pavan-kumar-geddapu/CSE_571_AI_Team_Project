@@ -2,3 +2,9 @@ __pycache__
 __pycache__/*
 .idea
 .idea/*
+__pycache__/game.cpython-36.pyc
+__pycache__/layout.cpython-36.pyc
+__pycache__/pacman.cpython-36.pyc
+__pycache__/search.cpython-36.pyc
+__pycache__/searchAgents.cpython-36.pyc
+__pycache__/util.cpython-36.pyc

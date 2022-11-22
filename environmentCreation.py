@@ -3,7 +3,7 @@ import csv
 import subprocess
 import random
 
-itrCount = 10
+itrCount = 100
 algos = ["dfs", "bfs", "ucs", "astar", "bds"]
 layouts = ["tinyMaze", "smallMaze", "mediumMaze", "bigMaze"]
 

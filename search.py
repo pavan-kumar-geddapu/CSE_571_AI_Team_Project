@@ -377,7 +377,7 @@ def biDirectionalSearch(problem):
                     if endCurNode == curNode:
 
                         # reverse end node's path and get final path by combining both paths.
-                        finalPath = curPath + endCurPath.reverse()
+                        finalPath = curPath + reverseDirections(endCurPath[::-1])
 
                         # call isGoalState with goal state to draw expanded states.
                         problem.isGoalState(problem.goal)

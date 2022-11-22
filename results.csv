@@ -1,0 +1,21 @@
+layout,algorithm,iteration,cost,expanded nodes,score,result
+tinyMaze,dfs,1,10,10,500,Win
+tinyMaze,bfs,1,4,7,506,Win
+tinyMaze,ucs,1,4,7,506,Win
+tinyMaze,astar,1,4,7,506,Win
+tinyMaze,bds,1,4,6,506,Win
+smallMaze,dfs,1,16,26,494,Win
+smallMaze,bfs,1,4,13,506,Win
+smallMaze,ucs,1,4,13,506,Win
+smallMaze,astar,1,4,13,506,Win
+smallMaze,bds,1,4,9,506,Win
+mediumMaze,dfs,1,12,12,498,Win
+mediumMaze,bfs,1,12,24,498,Win
+mediumMaze,ucs,1,12,24,498,Win
+mediumMaze,astar,1,12,24,498,Win
+mediumMaze,bds,1,12,24,498,Win
+bigMaze,dfs,1,114,401,396,Win
+bigMaze,bfs,1,114,440,396,Win
+bigMaze,ucs,1,114,440,396,Win
+bigMaze,astar,1,114,440,396,Win
+bigMaze,bds,1,114,522,396,Win

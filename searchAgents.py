@@ -156,6 +156,12 @@ class PositionSearchProblem(search.SearchProblem):
         self.startState = gameState.getPacmanPosition()
         if start != None: self.startState = start
         self.goal = goal
+        food = gameState.getFood()
+        for i in range(food.width):
+            for j in range(food.height):
+                if gameState.hasFood(i, j):
+                    self.goal = (i, j)
+                    break
         self.costFn = costFn
         self.visualize = visualize
         if warn and (gameState.getNumFood() != 1 or not gameState.hasFood(*goal)):

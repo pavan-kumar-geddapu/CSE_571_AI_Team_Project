@@ -407,7 +407,7 @@ def biDirectionalSearch(problem):
             # else visit current node's successors (children nodes)
             else:
 
-                curNodeScucessors = problem.getSuccessors(curNode)
+                curNodeScucessors = problem.getSuccessorsForBds(curNode)
 
                 for childNode in curNodeScucessors:
 
@@ -478,7 +478,7 @@ def biDirectionalSearch(problem):
             # visit current node's successors (children nodes)
             else:
 
-                curNodeScucessors = problem.getSuccessors(curNode)
+                curNodeScucessors = problem.getSuccessorsForBds(curNode)
 
                 for childNode in curNodeScucessors:
 

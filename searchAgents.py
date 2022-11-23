@@ -239,6 +239,9 @@ class PositionSearchProblem(search.SearchProblem):
             cost += self.costFn((x,y))
         return cost
 
+    def getSuccessorsForBds(self, state):
+        return self.getSuccessors(state)
+
     def getNextStartStateForBds(self):
         return self.nextStartState
 

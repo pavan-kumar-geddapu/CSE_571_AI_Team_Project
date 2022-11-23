@@ -397,7 +397,7 @@ def biDirectionalSearch(problem):
                         endInitialNode = (problem.getNextGoalForBds(), [])
                         endFrontierList.push(endInitialNode)
 
-                        # if all goals were found return path.
+                        # if all goals were found return combined path.
                         if problem.isGoalStateForBds():
                             return finalCombinedPath
 
@@ -470,12 +470,13 @@ def biDirectionalSearch(problem):
                         endInitialNode = (problem.getNextGoalForBds(), [])
                         endFrontierList.push(endInitialNode)
 
+                        # if all goals are covered, return combined path.
                         if problem.isGoalStateForBds():
                             return finalCombinedPath
                         else:
                             break
 
-            # visit current node's successors (children nodes)
+            # else visit current node's successors (children nodes)
             else:
 
                 curNodeScucessors = problem.getSuccessorsForBds(curNode)

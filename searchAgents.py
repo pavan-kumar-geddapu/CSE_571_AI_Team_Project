@@ -156,12 +156,6 @@ class PositionSearchProblem(search.SearchProblem):
         self.startState = gameState.getPacmanPosition()
         if start != None: self.startState = start
         self.goal = goal
-        food = gameState.getFood()
-        for i in range(food.width):
-            for j in range(food.height):
-                if gameState.hasFood(i, j):
-                    self.goal = (i, j)
-                    break
         self.costFn = costFn
         self.visualize = visualize
         if warn and (gameState.getNumFood() != 1 or not gameState.hasFood(*goal)):
@@ -169,6 +163,19 @@ class PositionSearchProblem(search.SearchProblem):
 
         # For display purposes
         self._visited, self._visitedlist, self._expanded = {}, [], 0 # DO NOT CHANGE
+
+        # initialize required variables for bi-direction search.
+        food = gameState.getFood()
+        for i in range(food.width):
+            for j in range(food.height):
+                if gameState.hasFood(i, j):
+                    self.goal = (i, j)
+                    break
+
+        self.goals = [self.goal]
+        self.prevGoal = None
+        self.visitedGoals = list()
+        self.nextStartState = self.startState
 
     def getStartState(self):
         return self.startState
@@ -231,6 +238,23 @@ class PositionSearchProblem(search.SearchProblem):
             if self.walls[x][y]: return 999999
             cost += self.costFn((x,y))
         return cost
+
+    def getNextStartStateForBds(self):
+        return self.nextStartState
+
+    def getNextGoalForBds(self):
+        self.visitedGoals.append(self.prevGoal)
+        for goal in self.goals:
+            if goal not in self.visitedGoals:
+                self.nextStartState = goal
+                self.prevGoal = goal
+                return goal
+
+    def isGoalStateForBds(self):
+        for goal in self.goals:
+            if goal not in self.visitedGoals:
+                return False
+        return True
 
 class StayEastSearchAgent(SearchAgent):
     """

@@ -326,7 +326,7 @@ def biDirectionalSearch(problem):
     # list to store nodes visited from start node.
     startVisitedList = list()
 
-    startInitialNode = (problem.getStartState(), [])
+    startInitialNode = (problem.getNextStartStateForBds(), [])
 
     # push initial node to start frontier (node contains current state and path from root).
     startFrontierList.push(startInitialNode)
@@ -340,14 +340,17 @@ def biDirectionalSearch(problem):
     # list to store nodes visited from start node.
     endVisitedList = list()
 
-    endInitialNode = (problem.goal, [])
+    endInitialNode = (problem.getNextGoalForBds(), [])
 
     # push initial node to end frontier (node contains current state and path from root).
     endFrontierList.push(endInitialNode)
 
+    # to store all goals combined path.
+    finalCombinedPath = list()
+
     # iterate till we find the goal noad or get exhaust.
     while True:
-        
+
         # if both frontiers are empty, then goal node is not found, so return null path.
         if startFrontierList.isEmpty() and endFrontierList.isEmpty():
             return []
@@ -379,29 +382,48 @@ def biDirectionalSearch(problem):
                         # reverse end node's path and get final path by combining both paths.
                         finalPath = curPath + reverseDirections(endCurPath[::-1])
 
-                        # call isGoalState with goal state to draw expanded states.
-                        problem.isGoalState(problem.goal)
+                        # add current goal path to final combined path.
+                        finalCombinedPath.extend(finalPath)
 
-                        return finalPath
+                        # reinstate all lists to get path to new goal.
+                        startFrontierList = Queue()
+                        startExploredList = set()
+                        startVisitedList = list()
+                        startInitialNode = (problem.getNextStartStateForBds(), [])
+                        startFrontierList.push(startInitialNode)
+                        endFrontierList = Queue()
+                        endExploredList = set()
+                        endVisitedList = list()
+                        endInitialNode = (problem.getNextGoalForBds(), [])
+                        endFrontierList.push(endInitialNode)
+
+                        # if all goals were found return path.
+                        if problem.isGoalStateForBds():
+                            return finalCombinedPath
+
+                        else:
+                            break
             
-            # visit current node's successors (children nodes)
-            curNodeScucessors = problem.getSuccessors(curNode)
+            # else visit current node's successors (children nodes)
+            else:
 
-            for childNode in curNodeScucessors:
+                curNodeScucessors = problem.getSuccessors(curNode)
 
-                # in case the successor node is not explored and is not in frontier list.
-                if childNode[0] not in startExploredList and childNode[0] not in startVisitedList:
+                for childNode in curNodeScucessors:
 
-                    # find path to child node.
-                    childPath = curPath + [childNode[1]]
+                    # in case the successor node is not explored and is not in frontier list.
+                    if childNode[0] not in startExploredList and childNode[0] not in startVisitedList:
 
-                    newChildNode = (childNode[0], childPath)
+                        # find path to child node.
+                        childPath = curPath + [childNode[1]]
 
-                    # push child node to frontier.
-                    startFrontierList.push(newChildNode)
+                        newChildNode = (childNode[0], childPath)
 
-                    # push child node to visited list.
-                    startVisitedList.append(childNode[0])
+                        # push child node to frontier.
+                        startFrontierList.push(newChildNode)
+
+                        # push child node to visited list.
+                        startVisitedList.append(childNode[0])
 
         # if end frontier is not empty expand it.
         if not endFrontierList.isEmpty():
@@ -433,29 +455,46 @@ def biDirectionalSearch(problem):
                         # get final path by combining both paths.
                         finalPath = startCurPath + reverseDirections(curPath)
 
-                        # call isGoalState with goal state to draw expanded states.
-                        problem.isGoalState(problem.goal)
+                        # add current goal path to final combined path.
+                        finalCombinedPath.extend(finalPath)
 
-                        return finalPath
-            
+                        # reinstate all lists to get path to new goal.
+                        startFrontierList = Queue()
+                        startExploredList = set()
+                        startVisitedList = list()
+                        startInitialNode = (problem.getNextStartStateForBds(), [])
+                        startFrontierList.push(startInitialNode)
+                        endFrontierList = Queue()
+                        endExploredList = set()
+                        endVisitedList = list()
+                        endInitialNode = (problem.getNextGoalForBds(), [])
+                        endFrontierList.push(endInitialNode)
+
+                        if problem.isGoalStateForBds():
+                            return finalCombinedPath
+                        else:
+                            break
+
             # visit current node's successors (children nodes)
-            curNodeScucessors = problem.getSuccessors(curNode)
+            else:
 
-            for childNode in curNodeScucessors:
+                curNodeScucessors = problem.getSuccessors(curNode)
 
-                # in case the successor node is not explored and is not in frontier list.
-                if childNode[0] not in endExploredList and childNode[0] not in endVisitedList:
+                for childNode in curNodeScucessors:
 
-                    # find path to child node.
-                    childPath = curPath + [childNode[1]]
+                    # in case the successor node is not explored and is not in frontier list.
+                    if childNode[0] not in endExploredList and childNode[0] not in endVisitedList:
 
-                    newChildNode = (childNode[0], childPath)
+                        # find path to child node.
+                        childPath = curPath + [childNode[1]]
 
-                    # push child node to frontier.
-                    endFrontierList.push(newChildNode)
+                        newChildNode = (childNode[0], childPath)
 
-                    # push child node to visited list.
-                    endVisitedList.append(childNode[0])
+                        # push child node to frontier.
+                        endFrontierList.push(newChildNode)
+
+                        # push child node to visited list.
+                        endVisitedList.append(childNode[0])
 
 def reverseDirections(directions):
     """Reverses the directions from goal node to current node."""

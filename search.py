@@ -16,6 +16,7 @@
 In search.py, you will implement generic search algorithms which are called by
 Pacman agents (in searchAgents.py).
 """
+import copy
 
 import util
 
@@ -94,9 +95,15 @@ def depthFirstSearch(problem):
 
     exploredList = set()    # set to store explored nodes
 
-    initialNode = (problem.getStartState(), [])
+    initialNode = (problem.getNextStartStateForBds(), [])
 
     frontierList.push(initialNode)    # push initial node to frontier (node contains current state and path from root)
+
+    # to initate goal Node
+    nextGoalNode = problem.getNextGoalForBds()
+
+    # to store all goals combined path.
+    finalCombinedPath = list()
 
     while True: # iterate till we find the goal noad or get exhaust
 
@@ -111,22 +118,40 @@ def depthFirstSearch(problem):
 
         exploredList.add(curNode)   # expanded nodes are added to the explored list
 
-        if problem.isGoalState(curNode):    # if goal was found, then return path
-            return curPath
-            
-        curNodeScucessors = problem.getSuccessors(curNode)
+        if problem.isCurrentGoalState(curNode):
 
-        for childNode in curNodeScucessors:    # visit current node's successors (children nodes)
+            # add current goal path to final combined path.
+            finalCombinedPath.extend(curPath)
 
-            if childNode[0] not in exploredList:    # in case the successor node is not explored then add it to frontier list
+            # reinstate all lists to get path to new goal.
+            frontierList = Stack()
+            exploredList = set()
+            initialNode = (problem.getNextStartStateForBds(), [])
+            frontierList.push(initialNode)
+            nextGoalNode = problem.getNextGoalForBds()
 
-                childPath = curPath + [childNode[1]]    # find path to child node
+            # if all goals were found return combined path.
+            if problem.isGoalStateForBds():
+                return finalCombinedPath
 
-                newChildNode = (childNode[0], childPath)
+            else:
+                continue
 
-                frontierList.push(newChildNode)    # push childnode to stack
+        else:
 
-    util.raiseNotDefined()
+            curNodeScucessors = problem.getSuccessorsForBds(curNode)
+
+            for childNode in curNodeScucessors:    # visit current node's successors (children nodes)
+
+                if childNode[0] not in exploredList:    # in case the successor node is not explored then add it to frontier list
+
+                    childPath = curPath + [childNode[1]]    # find path to child node
+
+                    newChildNode = (childNode[0], childPath)
+
+                    frontierList.push(newChildNode)    # push childnode to stack
+
+    # util.raiseNotDefined()
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
@@ -138,9 +163,15 @@ def breadthFirstSearch(problem):
 
     exploredList = set()    # set to store explored nodes
 
-    initialNode = (problem.getStartState(), [])
+    initialNode = (problem.getNextStartStateForBds(), [])
 
     frontierList.push(initialNode)    # push initial node to frontier (node contains current state and path from root)
+
+    # to initate goal Node
+    nextGoalNode = problem.getNextGoalForBds()
+
+    # to store all goals combined path.
+    finalCombinedPath = list()
 
     while True: # iterate until goal was found or frontier list exhausted
 
@@ -155,24 +186,42 @@ def breadthFirstSearch(problem):
 
         exploredList.add(curNode)   # expanded nodes are added to the explored list
 
-        if problem.isGoalState(curNode):    # if goal was found, then return path
-            return curPath
+        if problem.isCurrentGoalState(curNode):
 
-        curNodeScucessors = problem.getSuccessors(curNode)
-        
-        for childNode in curNodeScucessors:    # visit current node's successors (children nodes)
+            # add current goal path to final combined path.
+            finalCombinedPath.extend(curPath)
 
-            frontierNodeList = (frontierNode[0] for frontierNode in frontierList.list)
+            # reinstate all lists to get path to new goal.
+            frontierList = Queue()
+            exploredList = set()
+            initialNode = (problem.getNextStartStateForBds(), [])
+            frontierList.push(initialNode)
+            nextGoalNode = problem.getNextGoalForBds()
 
-            if childNode[0] not in exploredList and childNode[0] not in frontierNodeList:    # in case the successor node is not explored and is not in frontier list
+            # if all goals were found return combined path.
+            if problem.isGoalStateForBds():
+                return finalCombinedPath
 
-                childPath = curPath + [childNode[1]]    # find path to child node
+            else:
+                continue
 
-                newChildNode = (childNode[0], childPath)
+        else:
 
-                frontierList.push(newChildNode)    # push childnode to stack
+            curNodeScucessors = problem.getSuccessorsForBds(curNode)
 
-    util.raiseNotDefined()
+            for childNode in curNodeScucessors:    # visit current node's successors (children nodes)
+
+                frontierNodeList = (frontierNode[0] for frontierNode in frontierList.list)
+
+                if childNode[0] not in exploredList and childNode[0] not in frontierNodeList:    # in case the successor node is not explored and is not in frontier list
+
+                    childPath = curPath + [childNode[1]]    # find path to child node
+
+                    newChildNode = (childNode[0], childPath)
+
+                    frontierList.push(newChildNode)    # push childnode to stack
+
+    # util.raiseNotDefined()
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
@@ -184,9 +233,15 @@ def uniformCostSearch(problem):
 
     exploredList = set()    # set to store explored nodes
 
-    initialNode = (problem.getStartState(), [])
+    initialNode = (problem.getNextStartStateForBds(), [])
 
     frontierList.push(initialNode, 0)    # push initial node to frontier (node contains current state and path from root)
+
+    # to initate goal Node
+    nextGoalNode = problem.getNextGoalForBds()
+
+    # to store all goals combined path.
+    finalCombinedPath = list()
 
     while True: # iterate till goal was found or frontier list exhausted
 
@@ -201,41 +256,59 @@ def uniformCostSearch(problem):
 
         exploredList.add(curNode)   # expanded nodes are added to the explored list
 
-        if problem.isGoalState(curNode):    # if goal was found, then return path
-            return curPath
+        if problem.isCurrentGoalState(curNode):
 
-        curNodeScucessors = problem.getSuccessors(curNode)
-        
-        for childNode in curNodeScucessors:    # visit current node's successors (children nodes)
+            # add current goal path to final combined path.
+            finalCombinedPath.extend(curPath)
 
-            frontierNodeList = (frontierNode[2][0] for frontierNode in frontierList.heap)
+            # reinstate all lists to get path to new goal.
+            frontierList = PriorityQueue()
+            exploredList = set()
+            initialNode = (problem.getNextStartStateForBds(), [])
+            frontierList.push(initialNode, 0)
+            nextGoalNode = problem.getNextGoalForBds()
 
-            if childNode[0] not in exploredList and childNode[0] not in frontierNodeList: # in case the successor node is not explored and is not in frontier list
+            # if all goals were found return combined path.
+            if problem.isGoalStateForBds():
+                return finalCombinedPath
 
-                childPath = curPath + [childNode[1]]    # find path to child node
+            else:
+                continue
 
-                childCost = problem.getCostOfActions(childPath) # find cost to the child node
+        else:
 
-                newChildNode = (childNode[0], childPath)
+            curNodeScucessors = problem.getSuccessorsForBds(curNode)
 
-                frontierList.push(newChildNode, childCost) # push child node to frontier list
+            for childNode in curNodeScucessors:    # visit current node's successors (children nodes)
 
-            elif childNode[0] not in exploredList and childNode[0] in (frontierNode[2][0] for frontierNode in frontierList.heap):   # in case the successor node is not explored and is already in frontier list, then we check new path's cost and update accordingly
-                
-                oldCost = 0
+                frontierNodeList = (frontierNode[2][0] for frontierNode in frontierList.heap)
 
-                for frontierNode in frontierList.heap:  # find old cost of the child node
-                    if frontierNode[2][0] == childNode[0]:  # check for the child node in frontier list
-                        oldCost = problem.getCostOfActions(frontierNode[2][1])  # find it's cost
+                if childNode[0] not in exploredList and childNode[0] not in frontierNodeList: # in case the successor node is not explored and is not in frontier list
 
-                childPath = curPath + [childNode[1]]    # find child node path
+                    childPath = curPath + [childNode[1]]    # find path to child node
 
-                newChildNode = (childNode[0], childPath)
+                    childCost = problem.getCostOfActionsForBds(childPath) # find cost to the child node
 
-                newCost = problem.getCostOfActions(childPath)   # find new cost of the child node
+                    newChildNode = (childNode[0], childPath)
 
-                if oldCost > newCost:   # if new cost is better then old cost then update frontier node with new cost
-                    frontierList.update(newChildNode, newCost)
+                    frontierList.push(newChildNode, childCost) # push child node to frontier list
+
+                elif childNode[0] not in exploredList and childNode[0] in (frontierNode[2][0] for frontierNode in frontierList.heap):   # in case the successor node is not explored and is already in frontier list, then we check new path's cost and update accordingly
+
+                    oldCost = 0
+
+                    for frontierNode in frontierList.heap:  # find old cost of the child node
+                        if frontierNode[2][0] == childNode[0]:  # check for the child node in frontier list
+                            oldCost = problem.getCostOfActionsForBds(frontierNode[2][1])  # find it's cost
+
+                    childPath = curPath + [childNode[1]]    # find child node path
+
+                    newChildNode = (childNode[0], childPath)
+
+                    newCost = problem.getCostOfActionsForBds(childPath)   # find new cost of the child node
+
+                    if oldCost > newCost:   # if new cost is better then old cost then update frontier node with new cost
+                        frontierList.update(newChildNode, newCost)
 
     util.raiseNotDefined()
 
@@ -245,6 +318,27 @@ def nullHeuristic(state, problem=None):
     goal in the provided SearchProblem.  This heuristic is trivial.
     """
     return 0
+
+def manhattanDistance(startPos, endPos):
+    "The Manhattan distance between two points."
+    return abs(startPos[0] - endPos[0]) + abs(startPos[1] - endPos[1])
+def aStarHeuristic(state, foodLocations):
+    """
+    A heuristic to get min manhattan distance from current state to
+    all remaining food locations.
+    """
+    hValue = 0
+
+    remFood = [copy.deepcopy(food) for food in foodLocations]
+    curLocation = state
+    while len(remFood) > 0:
+        distances = [(manhattanDistance(curLocation, food), food) for food in remFood]
+        distances = sorted(distances)
+        hValue += distances[0][0]
+        remFood.remove(distances[0][1])
+        curLocation = distances[0][1]
+
+    return hValue
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
@@ -256,11 +350,17 @@ def aStarSearch(problem, heuristic=nullHeuristic):
 
     exploredList = set()    # set to store explored nodes
 
-    fnValue = problem.getCostOfActions([])+heuristic(problem.getStartState(), problem)  # Calculate f(n) value of the start node
+    fnValue = problem.getCostOfActionsForBds([])+aStarHeuristic(problem.getNextStartStateForBds(), problem.getRemainingGoals())  # Calculate f(n) value of the start node
 
-    initialNode = (problem.getStartState(), [])
+    initialNode = (problem.getNextStartStateForBds(), [])
 
     frontierList.push(initialNode, fnValue)   # push initial node to frontier (node contains current state and path from root), priority is f(n) value
+
+    # to initate goal Node
+    nextGoalNode = problem.getNextGoalForBds()
+
+    # to store all goals combined path.
+    finalCombinedPath = list()
 
     while True: # iterate till goal node is found or frontier list exhausted
 
@@ -278,37 +378,56 @@ def aStarSearch(problem, heuristic=nullHeuristic):
 
         exploredList.add(curNode)   # expanded nodes are added to the explored list
 
-        if problem.isGoalState(curNode):    # if goal was found, then return path
-            return curPath
+        if problem.isCurrentGoalState(curNode):
 
-        curNodeScucessors = problem.getSuccessors(curNode)
-        
-        for childNode in curNodeScucessors:    # visit current node's successors (children nodes)
+            # add current goal path to final combined path.
+            finalCombinedPath.extend(curPath)
 
-            if childNode[0] not in exploredList:    # in case the successor node is not explored, add it to frontier list
+            # reinstate all lists to get path to new goal.
+            frontierList = PriorityQueue()
+            exploredList = set()
+            initialNode = (problem.getNextStartStateForBds(), [])
+            fnValue = problem.getCostOfActionsForBds([])+aStarHeuristic(problem.getNextStartStateForBds(), problem.getRemainingGoals())
+            frontierList.push(initialNode, fnValue)
+            nextGoalNode = problem.getNextGoalForBds()
 
-                childPath = curPath + [childNode[1]]    # find child node path
+            # if all goals were found return combined path.
+            if problem.isGoalStateForBds():
+                return finalCombinedPath
 
-                childCost = problem.getCostOfActions(childPath)+heuristic(childNode[0], problem) # find child node f(n) value
-                
-                newChildNode = (childNode[0], childPath)
+            else:
+                continue
 
-                frontierList.push(newChildNode, childCost) # push child node to frontier list
+        else:
 
-            elif childNode[0] not in exploredList and childNode[0] in (frontierNode[2][0] for frontierNode in frontierList.heap):   # in case the successor node is not explored and is already in frontier list, then we check new path's cost and update accordingly
-                
-                oldCost = 0
+            curNodeScucessors = problem.getSuccessorsForBds(curNode)
 
-                for frontierNode in frontierList.heap:  # find old cost of the child node
-                    if frontierNode[2][0] == childNode[0]:  # check for the child node in frontier list
-                        oldCost = problem.getCostOfActions(frontierNode[2][1])  # find it's cost
+            for childNode in curNodeScucessors:    # visit current node's successors (children nodes)
 
-                childPath = curPath + [childNode[1]]    # find child node path
+                if childNode[0] not in exploredList:    # in case the successor node is not explored, add it to frontier list
 
-                newCost = problem.getCostOfActions(childPath)+heuristic(childNode[0], problem) # find child node f(n) value
+                    childPath = curPath + [childNode[1]]    # find child node path
 
-                if oldCost > newCost:   # if new cost is better then old cost then update frontier node with new cost
-                    frontierList.update((childNode[0], childPath), newCost)
+                    childCost = problem.getCostOfActionsForBds(childPath)+aStarHeuristic(childNode[0], problem.getRemainingGoals()) # find child node f(n) value
+
+                    newChildNode = (childNode[0], childPath)
+
+                    frontierList.push(newChildNode, childCost) # push child node to frontier list
+
+                elif childNode[0] not in exploredList and childNode[0] in (frontierNode[2][0] for frontierNode in frontierList.heap):   # in case the successor node is not explored and is already in frontier list, then we check new path's cost and update accordingly
+
+                    oldCost = 0
+
+                    for frontierNode in frontierList.heap:  # find old cost of the child node
+                        if frontierNode[2][0] == childNode[0]:  # check for the child node in frontier list
+                            oldCost = problem.getCostOfActionsForBds(frontierNode[2][1]) + aStarHeuristic(frontierNode[2][0], problem.getRemainingGoals())  # find it's cost
+
+                    childPath = curPath + [childNode[1]]    # find child node path
+
+                    newCost = problem.getCostOfActionsForBds(childPath)+aStarHeuristic(childNode[0], problem.getRemainingGoals()) # find child node f(n) value
+
+                    if oldCost > newCost:   # if new cost is better then old cost then update frontier node with new cost
+                        frontierList.update((childNode[0], childPath), newCost)
 
     util.raiseNotDefined()
 

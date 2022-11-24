@@ -182,6 +182,7 @@ class PositionSearchProblem(search.SearchProblem):
         self.goals = [self.goal]
         self.prevGoal = None
         self.visitedGoals = list()
+        self.prevStartState = self.startState
         # to get next start state after finding one food location.
         self.nextStartState = self.startState
 
@@ -247,6 +248,31 @@ class PositionSearchProblem(search.SearchProblem):
             cost += self.costFn((x,y))
         return cost
 
+    def getCostOfActionsForBds(self, actions):
+        """
+        Returns the cost of a particular sequence of actions. If those actions
+        include an illegal move, return 999999.
+        """
+        if actions == None: return 999999
+        x,y= self.prevStartState
+        cost = 0
+        for action in actions:
+            # Check figure out the next state and see whether its' legal
+            dx, dy = Actions.directionToVector(action)
+            x, y = int(x + dx), int(y + dy)
+            if self.walls[x][y]: return 999999
+            cost += self.costFn((x,y))
+        return cost
+
+    def isCurrentGoalState(self, state):
+        """
+        to check state is current goal node.
+        """
+        if state == self.prevGoal:
+            self._visitedlist.append(state)
+            return True
+        return False
+
     def getSuccessorsForBds(self, state):
         """
         get successor states for current state.
@@ -266,9 +292,11 @@ class PositionSearchProblem(search.SearchProblem):
         self.visitedGoals.append(self.prevGoal)
         for goal in self.goals:
             if goal not in self.visitedGoals:
+                self.prevStartState = self.nextStartState
                 self.nextStartState = goal
                 self.prevGoal = goal
                 return goal
+        return None
 
     def isGoalStateForBds(self):
         """
@@ -285,6 +313,16 @@ class PositionSearchProblem(search.SearchProblem):
                 if 'drawExpandedCells' in dir(__main__._display):  # @UndefinedVariable
                     __main__._display.drawExpandedCells(self._visitedlist)  # @UndefinedVariable
         return True
+
+    def getRemainingGoals(self):
+        """
+        get all non visited goals.
+        """
+        remGoals = []
+        for goal in self.goals:
+            if goal not in self.visitedGoals:
+                remGoals.append(copy.deepcopy(goal))
+        return remGoals
 
 class StayEastSearchAgent(SearchAgent):
     """
@@ -356,6 +394,7 @@ class CornersProblem(search.SearchProblem):
         self.goals = copy.deepcopy(self.corners)
         self.prevGoal = None
         self.visitedGoals = list()
+        self.prevStartState = self.startingPosition
         # to get next start state after finding one food location.
         self.nextStartState = self.startingPosition
 
@@ -442,6 +481,19 @@ class CornersProblem(search.SearchProblem):
             if self.walls[x][y]: return 999999
         return len(actions)
 
+    def getCostOfActionsForBds(self, actions):
+        """
+        Returns the cost of a particular sequence of actions.  If those actions
+        include an illegal move, return 999999.  This is implemented for you.
+        """
+        if actions == None: return 999999
+        x, y = self.prevStartState
+        for action in actions:
+            dx, dy = Actions.directionToVector(action)
+            x, y = int(x + dx), int(y + dy)
+            if self.walls[x][y]: return 999999
+        return len(actions)
+
     def getSuccessorsForBds(self, state):
         """
         get successor states for current state.
@@ -457,6 +509,14 @@ class CornersProblem(search.SearchProblem):
 
         self._expanded += 1  # DO NOT CHANGE
         return successors
+
+    def isCurrentGoalState(self, state):
+        """
+        to check state is current goal node.
+        """
+        if state == self.prevGoal:
+            return True
+        return False
 
     def getNextStartStateForBds(self):
         """
@@ -476,6 +536,7 @@ class CornersProblem(search.SearchProblem):
                 if goalManhattanDistance > manhattanDistance(goal, self.nextStartState):
                     nextGoal = goal
                     goalManhattanDistance = manhattanDistance(goal, self.nextStartState)
+        self.prevStartState = self.nextStartState
         self.nextStartState = nextGoal
         self.prevGoal = nextGoal
         return nextGoal
@@ -488,6 +549,16 @@ class CornersProblem(search.SearchProblem):
             if goal not in self.visitedGoals:
                 return False
         return True
+
+    def getRemainingGoals(self):
+        """
+        get all non visited goals.
+        """
+        remGoals = []
+        for goal in self.goals:
+            if goal not in self.visitedGoals:
+                remGoals.append(copy.deepcopy(goal))
+        return remGoals
 
 
 def cornersHeuristic(state, problem):
@@ -571,6 +642,7 @@ class FoodSearchProblem:
 
         self.prevGoal = None
         self.visitedGoals = list()
+        self.prevStartState = startingGameState.getPacmanPosition()
         # to get next start state after finding one food location.
         self.nextStartState = startingGameState.getPacmanPosition()
 
@@ -610,6 +682,20 @@ class FoodSearchProblem:
             cost += 1
         return cost
 
+    def getCostOfActionsForBds(self, actions):
+        """Returns the cost of a particular sequence of actions.  If those actions
+        include an illegal move, return 999999"""
+        x,y= self.prevStartState
+        cost = 0
+        for action in actions:
+            # figure out the next state and see whether it's legal
+            dx, dy = Actions.directionToVector(action)
+            x, y = int(x + dx), int(y + dy)
+            if self.walls[x][y]:
+                return 999999
+            cost += 1
+        return cost
+
     def getSuccessorsForBds(self, state):
         """
         get successor states for current state.
@@ -625,6 +711,14 @@ class FoodSearchProblem:
 
         self._expanded += 1  # DO NOT CHANGE
         return successors
+
+    def isCurrentGoalState(self, state):
+        """
+        to check state is current goal node.
+        """
+        if state == self.prevGoal:
+            return True
+        return False
 
     def getNextStartStateForBds(self):
         """
@@ -644,6 +738,7 @@ class FoodSearchProblem:
                 if goalManhattanDistance > manhattanDistance(goal, self.nextStartState):
                     nextGoal = goal
                     goalManhattanDistance = manhattanDistance(goal, self.nextStartState)
+        self.prevStartState = self.nextStartState
         self.nextStartState = nextGoal
         self.prevGoal = nextGoal
         return nextGoal
@@ -656,6 +751,16 @@ class FoodSearchProblem:
             if goal not in self.visitedGoals:
                 return False
         return True
+
+    def getRemainingGoals(self):
+        """
+        get all non visited goals.
+        """
+        remGoals = []
+        for goal in self.goals:
+            if goal not in self.visitedGoals:
+                remGoals.append(copy.deepcopy(goal))
+        return remGoals
 
 def mazeDistance(point1, point2, gameState):
     """

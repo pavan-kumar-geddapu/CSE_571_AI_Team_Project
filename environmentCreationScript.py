@@ -5,15 +5,15 @@ import subprocess
 import random
 
 
-_itrCountPositionSearchProblem = 1
-_itrCountCornersProblem = 1
-_itrCountFoodSearchProblem = 1
+_itrCountPositionSearchProblem = 50
+_itrCountCornersProblem = 50
+_itrCountFoodSearchProblem = 10
 _algos = ["dfs", "bfs", "ucs", "astar", "bds"]
 _layouts = {"PositionSearchProblem": ["tinyMaze", "smallMaze", "mediumMaze", "bigMaze"], \
             "CornersProblem": ["tinyCorners", "smallCorners", "mediumCorners", "bigCorners"], \
             "FoodSearchProblem": ["tinySearch", "smallSearch", "mediumSearch", "bigSearch"]}
 _problems = ["PositionSearchProblem", "CornersProblem", "FoodSearchProblem"]
-_maxFoodCount = 5
+_maxFoodCount = 20
 
 def generateCleanLayouts():
     """
@@ -186,7 +186,7 @@ def generateAllLayouts():
                 cleanLayout = layout + "Clean"
                 emptyCells = getEmptyCells(cleanLayout)
                 for itr in range(1, _itrCountFoodSearchProblem + 1):
-                    foodNumber = min(int(len(emptyCells)/10), _maxFoodCount)
+                    foodNumber = min(int(len(emptyCells)/5), _maxFoodCount, len(emptyCells)-1)
                     for foodCount in range(2, foodNumber+1):
                         foodPositions = getFoodPositions(emptyCells, foodCount)
                         pacmanPosition = getPacmanPosition(emptyCells, foodPositions)
@@ -266,7 +266,7 @@ def runAlgos():
                 for algo in _algos:
                     for itr in range(1, _itrCountPositionSearchProblem + 1):
                         finalLayout = layout + str(itr)
-                        curResult = [finalLayout, algo, itr]
+                        curResult = [layout, algo, itr]
                         curResult.extend(runScript(finalLayout, algo, problem))
                         resultsPositionSearchProblem.append(curResult)
                         printProgress(problem, finalLayout, algo, itr)
@@ -276,7 +276,7 @@ def runAlgos():
                 for algo in _algos:
                     for itr in range(1, _itrCountCornersProblem + 1):
                         finalLayout = layout + str(itr)
-                        curResult = [finalLayout, algo, itr]
+                        curResult = [layout, algo, itr]
                         curResult.extend(runScript(finalLayout, algo, problem))
                         resultsCornersProblem.append(curResult)
                         printProgress(problem, finalLayout, algo, itr)
@@ -287,10 +287,10 @@ def runAlgos():
                 emptyCells = getEmptyCells(cleanLayout)
                 for algo in _algos:
                     for itr in range(1, _itrCountFoodSearchProblem + 1):
-                        foodNumber = min(int(len(emptyCells)/10), _maxFoodCount)
+                        foodNumber = min(int(len(emptyCells)/5), _maxFoodCount, len(emptyCells)-1)
                         for foodCount in range(2, foodNumber+1):
                             finalLayout = layout + str(itr) + "_" + str(foodCount)
-                            curResult = [finalLayout, algo, itr, foodCount]
+                            curResult = [layout, algo, itr, foodCount]
                             curResult.extend(runScript(finalLayout, algo, problem))
                             resultsFoodSearchProblem.append(curResult)
                             printProgress(problem, finalLayout, algo, itr, foodCount)
@@ -328,7 +328,7 @@ def removeGeneratedLayouts():
                 cleanLayout = layout + "Clean"
                 emptyCells = getEmptyCells(cleanLayout)
                 for itr in range(1, _itrCountFoodSearchProblem + 1):
-                    foodNumber = min(int(len(emptyCells)/10), _maxFoodCount)
+                    foodNumber = min(int(len(emptyCells)/5), _maxFoodCount, len(emptyCells)-1)
                     for foodCount in range(2, foodNumber + 1):
                         finalLayout = layout + str(itr) + "_" + str(foodCount)
                         os.remove("layouts/{}.lay".format(finalLayout))

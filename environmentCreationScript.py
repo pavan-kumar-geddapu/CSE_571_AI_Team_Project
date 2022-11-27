@@ -4,16 +4,16 @@ import os
 import subprocess
 import random
 
-
 _itrCountPositionSearchProblem = 50
 _itrCountCornersProblem = 50
-_itrCountFoodSearchProblem = 10
+_itrCountFoodSearchProblem = 30
 _algos = ["dfs", "bfs", "ucs", "astar", "bds"]
 _layouts = {"PositionSearchProblem": ["tinyMaze", "smallMaze", "mediumMaze", "bigMaze"], \
             "CornersProblem": ["tinyCorners", "smallCorners", "mediumCorners", "bigCorners"], \
             "FoodSearchProblem": ["tinySearch", "smallSearch", "mediumSearch", "bigSearch"]}
 _problems = ["PositionSearchProblem", "CornersProblem", "FoodSearchProblem"]
 _maxFoodCount = 20
+
 
 def generateCleanLayouts():
     """
@@ -148,13 +148,15 @@ def getDimensions(layout):
 
     return (height, len(rows[0]))
 
+
 def getCornersProblemFoodPositions(layout):
     """
     get all four corner's positions for corner problem.
     """
     dimensions = getDimensions(layout)
-    top, right = dimensions[0]-2, dimensions[1]-2
-    return ((1,1), (1, right), (top, 1), (top, right))
+    top, right = dimensions[0] - 2, dimensions[1] - 2
+    return ((1, 1), (1, right), (top, 1), (top, right))
+
 
 def generateAllLayouts():
     """
@@ -186,22 +188,13 @@ def generateAllLayouts():
                 cleanLayout = layout + "Clean"
                 emptyCells = getEmptyCells(cleanLayout)
                 for itr in range(1, _itrCountFoodSearchProblem + 1):
-                    foodNumber = min(int(len(emptyCells)/5), _maxFoodCount, len(emptyCells)-1)
-                    for foodCount in range(2, foodNumber+1):
+                    foodNumber = min(int(len(emptyCells) / 5), _maxFoodCount, len(emptyCells) - 1)
+                    for foodCount in range(2, foodNumber + 1):
                         foodPositions = getFoodPositions(emptyCells, foodCount)
                         pacmanPosition = getPacmanPosition(emptyCells, foodPositions)
-                        generateFinalLayout(cleanLayout, layout + str(itr) + "_" + str(foodCount), pacmanPosition, foodPositions)
+                        generateFinalLayout(cleanLayout, layout + str(itr) + "_" + str(foodCount), pacmanPosition,
+                                            foodPositions)
 
-
-def trimZeros(s):
-    """
-    helper function to trim zeros from sys output.
-    """
-    result = ""
-    for c in s:
-        if c != ' ':
-            result += str(c)
-    return result
 
 def runScript(layout, algorithm, problem):
     """
@@ -217,16 +210,22 @@ def runScript(layout, algorithm, problem):
     for row in sysOutputSplit:
         if "Path found with total cost of" in row:
             tmp = row.split(" ")
-            results.append(trimZeros(tmp[6]))
+            # print(tmp[6])
+            results.append(tmp[6].lstrip().rstrip())
+            # results.append(trimZeros(tmp[6]))
         elif "Search nodes expanded:" in row:
             tmp = row.split(":")
-            results.append(trimZeros(tmp[1]))
+            # print(tmp[1])
+            results.append(tmp[1].lstrip().rstrip())
+            # results.append(trimZeros(tmp[1]))
         elif "Pacman emerges victorious! Score:" in row:
             tmp = row.split(":")
-            results.append(trimZeros(tmp[1]))
+            results.append(tmp[1].lstrip().rstrip())
+            # results.append(trimZeros(tmp[1]))
         elif "Record:" in row:
             tmp = row.split(":")
-            results.append(trimZeros(tmp[1]))
+            results.append(tmp[1].lstrip().rstrip())
+            # results.append(trimZeros(tmp[1]))
 
     return results
 
@@ -241,7 +240,7 @@ def writeResults(fileName, fields, data):
         write.writerows(data)
 
 
-def printProgress(problem, layout, algo, iteration, foodCount = 0):
+def printProgress(problem, layout, algo, iteration, foodCount=0):
     """
     helper function to print progress.
     """
@@ -287,8 +286,8 @@ def runAlgos():
                 emptyCells = getEmptyCells(cleanLayout)
                 for algo in _algos:
                     for itr in range(1, _itrCountFoodSearchProblem + 1):
-                        foodNumber = min(int(len(emptyCells)/5), _maxFoodCount, len(emptyCells)-1)
-                        for foodCount in range(2, foodNumber+1):
+                        foodNumber = min(int(len(emptyCells) / 5), _maxFoodCount, len(emptyCells) - 1)
+                        for foodCount in range(2, foodNumber + 1):
                             finalLayout = layout + str(itr) + "_" + str(foodCount)
                             curResult = [layout, algo, itr, foodCount]
                             curResult.extend(runScript(finalLayout, algo, problem))
@@ -297,12 +296,14 @@ def runAlgos():
 
         # write results to csv file.
         fieldsPositionSearchProblem = ["layout", "algorithm", "iteration", "cost", "expandedNodes", "score", "result"]
-        writeResults("results/positionalSearchProblemResults.csv", fieldsPositionSearchProblem, resultsPositionSearchProblem)
+        writeResults("results/positionalSearchProblemResults.csv", fieldsPositionSearchProblem,
+                     resultsPositionSearchProblem)
 
         fieldsCornersProblem = ["layout", "algorithm", "iteration", "cost", "expandedNodes", "score", "result"]
         writeResults("results/cornersProblemResults.csv", fieldsCornersProblem, resultsCornersProblem)
 
-        fieldsFoodSearchProblem = ["layout", "algorithm", "iteration", "foodCount", "cost", "expandedNodes", "score", "result"]
+        fieldsFoodSearchProblem = ["layout", "algorithm", "iteration", "foodCount", "cost", "expandedNodes", "score",
+                                   "result"]
         writeResults("results/foodSearchProblemResults.csv", fieldsFoodSearchProblem, resultsFoodSearchProblem)
 
 
@@ -328,7 +329,7 @@ def removeGeneratedLayouts():
                 cleanLayout = layout + "Clean"
                 emptyCells = getEmptyCells(cleanLayout)
                 for itr in range(1, _itrCountFoodSearchProblem + 1):
-                    foodNumber = min(int(len(emptyCells)/5), _maxFoodCount, len(emptyCells)-1)
+                    foodNumber = min(int(len(emptyCells) / 5), _maxFoodCount, len(emptyCells) - 1)
                     for foodCount in range(2, foodNumber + 1):
                         finalLayout = layout + str(itr) + "_" + str(foodCount)
                         os.remove("layouts/{}.lay".format(finalLayout))

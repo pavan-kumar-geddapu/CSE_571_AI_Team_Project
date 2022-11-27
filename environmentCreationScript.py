@@ -193,16 +193,6 @@ def generateAllLayouts():
                         generateFinalLayout(cleanLayout, layout + str(itr) + "_" + str(foodCount), pacmanPosition, foodPositions)
 
 
-def trimZeros(s):
-    """
-    helper function to trim zeros from sys output.
-    """
-    result = ""
-    for c in s:
-        if c != ' ':
-            result += str(c)
-    return result
-
 def runScript(layout, algorithm, problem):
     """
     run given command.
@@ -217,16 +207,16 @@ def runScript(layout, algorithm, problem):
     for row in sysOutputSplit:
         if "Path found with total cost of" in row:
             tmp = row.split(" ")
-            results.append(trimZeros(tmp[6]))
+            results.append(tmp[6].strip())
         elif "Search nodes expanded:" in row:
             tmp = row.split(":")
-            results.append(trimZeros(tmp[1]))
+            results.append(tmp[1].strip())
         elif "Pacman emerges victorious! Score:" in row:
             tmp = row.split(":")
-            results.append(trimZeros(tmp[1]))
+            results.append(tmp[1].strip())
         elif "Record:" in row:
             tmp = row.split(":")
-            results.append(trimZeros(tmp[1]))
+            results.append(tmp[1].strip())
 
     return results
 

@@ -5,11 +5,11 @@ import subprocess
 import random
 
 
-_itrCountPositionSearchProblem = 1
-_itrCountCornersProblem = 1
+_itrCountPositionSearchProblem = 10
+_itrCountCornersProblem = 10
 _itrCountFoodSearchProblem = 1
-_maxFoodCount = 2
-_layoutCount = 1
+_maxFoodCount = 11
+_layoutCount = 10
 _algos = ["dfs", "bfs", "ucs", "astar", "bds"]
 _layouts = ["tiny", "small", "medium", "big"]
 _layoutSizes = {"tiny": (5, 10), "small": (10, 15), "medium": (15, 20), "big": (20, 25)}
@@ -243,7 +243,7 @@ def generateAllLayouts():
                     cleanLayout = layout + "Clean" + str(layoutCount)
                     emptyCells = getEmptyCells(cleanLayout)
                     for itr in range(_itrCountFoodSearchProblem):
-                        foodNumber = min(int(len(emptyCells)/5), _maxFoodCount, len(emptyCells)-1)
+                        foodNumber = min(len(emptyCells)-1, _maxFoodCount)
                         for foodCount in range(2, foodNumber+1):
                             foodPositions = getFoodPositions(emptyCells, foodCount)
                             pacmanPosition = getPacmanPosition(emptyCells, foodPositions)
@@ -284,20 +284,17 @@ def writeResults(fileName, fields, data):
     """
     helper function to write data to csv file.
     """
-    with open(fileName, "w",newline = "") as f:
+    with open(fileName, "w", newline="") as f:
         write = csv.writer(f)
         write.writerow(fields)
         write.writerows(data)
 
 
-def printProgress(problem, layout, algo, iteration, foodCount = 0):
+def printProgress(problem, layout, algo):
     """
     helper function to print progress.
     """
-    if foodCount == 0:
-        print("done {} {} {} {}".format(problem, layout, algo, iteration))
-    else:
-        print("done {} {} {} {} {}".format(problem, layout, algo, iteration, foodCount))
+    print("done {} {} {}".format(problem, layout, algo))
 
 
 def runAlgos():
@@ -319,7 +316,7 @@ def runAlgos():
                             curResult = [layout, layoutCount, algo, itr]
                             curResult.extend(runScript(finalLayout, algo, problem))
                             resultsPositionSearchProblem.append(curResult)
-                            printProgress(problem, finalLayout, algo, itr)
+                            printProgress(problem, finalLayout, algo)
 
         if problem == "CornersProblem":
             for layout in _layouts:
@@ -330,7 +327,7 @@ def runAlgos():
                             curResult = [layout, layoutCount, algo, itr]
                             curResult.extend(runScript(finalLayout, algo, problem))
                             resultsCornersProblem.append(curResult)
-                            printProgress(problem, finalLayout, algo, itr)
+                            printProgress(problem, finalLayout, algo)
 
         if problem == "FoodSearchProblem":
             for layout in _layouts:
@@ -339,13 +336,13 @@ def runAlgos():
                     emptyCells = getEmptyCells(cleanLayout)
                     for algo in _algos:
                         for itr in range(_itrCountFoodSearchProblem):
-                            foodNumber = min(int(len(emptyCells)/5), _maxFoodCount, len(emptyCells)-1)
+                            foodNumber = min(len(emptyCells)-1, _maxFoodCount)
                             for foodCount in range(2, foodNumber+1):
                                 finalLayout = layout + _layoutType[problem] + str(layoutCount) + "Itr" + str(itr) + "FoodCount" + str(foodCount)
                                 curResult = [layout, layoutCount, algo, itr, foodCount]
                                 curResult.extend(runScript(finalLayout, algo, problem))
                                 resultsFoodSearchProblem.append(curResult)
-                                printProgress(problem, finalLayout, algo, itr, foodCount)
+                                printProgress(problem, finalLayout, algo)
 
         # write results to csv file.
         fieldsPositionSearchProblem = ["layout", "layoutCount", "algorithm", "iteration", "cost", "expandedNodes", "score", "result"]
@@ -383,7 +380,7 @@ def removeGeneratedLayouts():
                     cleanLayout = layout + "Clean" + str(layoutCount)
                     emptyCells = getEmptyCells(cleanLayout)
                     for itr in range(_itrCountFoodSearchProblem):
-                        foodNumber = min(int(len(emptyCells)/5), _maxFoodCount, len(emptyCells)-1)
+                        foodNumber = min(len(emptyCells)-1, _maxFoodCount)
                         for foodCount in range(2, foodNumber + 1):
                             finalLayout = layout + _layoutType[problem] + str(layoutCount) + "Itr" + str(itr) + "FoodCount" + str(foodCount)
                             os.remove("layouts/{}.lay".format(finalLayout))

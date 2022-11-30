@@ -284,7 +284,7 @@ def writeResults(fileName, fields, data):
     """
     helper function to write data to csv file.
     """
-    with open(fileName, "w") as f:
+    with open(fileName, "w",newline = "") as f:
         write = csv.writer(f)
         write.writerow(fields)
         write.writerows(data)

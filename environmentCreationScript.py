@@ -5,47 +5,102 @@ import subprocess
 import random
 
 
-_itrCountPositionSearchProblem = 50
-_itrCountCornersProblem = 50
-_itrCountFoodSearchProblem = 10
+_itrCountPositionSearchProblem = 1
+_itrCountCornersProblem = 1
+_itrCountFoodSearchProblem = 1
+_maxFoodCount = 2
+_layoutCount = 1
 _algos = ["dfs", "bfs", "ucs", "astar", "bds"]
-_layouts = {"PositionSearchProblem": ["tinyMaze", "smallMaze", "mediumMaze", "bigMaze"], \
-            "CornersProblem": ["tinyCorners", "smallCorners", "mediumCorners", "bigCorners"], \
-            "FoodSearchProblem": ["tinySearch", "smallSearch", "mediumSearch", "bigSearch"]}
+_layouts = ["tiny", "small", "medium", "big"]
+_layoutSizes = {"tiny": (5, 10), "small": (10, 15), "medium": (15, 20), "big": (20, 25)}
+_layoutWallCount = {"tiny": 20, "small": 50, "medium": 100, "big": 125}
+_layoutType = {"PositionSearchProblem": "Maze", "CornersProblem": "Corners", "FoodSearchProblem": "Search"}
 _problems = ["PositionSearchProblem", "CornersProblem", "FoodSearchProblem"]
-_maxFoodCount = 20
+
+
+def isPathAvailable(emptyCells, wallCells, height, width):
+    """
+    check if random generated maze has path.
+    """
+    dir = ((0, -1), (0, 1), (-1, 0), (1, 0))
+    visitedCells = []
+    queue = []
+    queue.append(emptyCells[0])
+    while len(queue) > 0:
+        cell = queue.pop(0)
+        visitedCells.append(cell)
+        for _x, _y in dir:
+            x, y = _x+cell[0], _y+cell[1]
+            if 0 <= x < height and 0 <= y < width and (x, y) not in wallCells and (x, y) not in visitedCells and (x, y) not in queue:
+                queue.append((x, y))
+
+    if len(visitedCells) != len(emptyCells):
+        return False
+    for cell in visitedCells:
+        if cell not in emptyCells:
+            return False
+    return True
+
+
+def generateNewLayout(height, width, layoutSize, layoutIteration):
+    """
+    generate random layout with given height, width.
+    """
+
+    wallCells = []
+    isPath = False
+
+    # find wall, empty cells for path.
+    while not isPath:
+        cells = [(i, j) for i in range(height) for j in range(width)]
+        cornerCells = ((0,0), (height-1, 0), (0, width-1), (height-1, width-1))
+        wallCells = []
+        count = 0
+        while count < _layoutWallCount[layoutSize]:
+            cell = random.choice(cells)
+            if cell not in cornerCells and cell not in wallCells:
+                wallCells.append(cell)
+                count += 1
+        emptyCells = [cell for cell in cells if cell not in wallCells]
+        isPath = isPathAvailable(emptyCells, wallCells, height, width)
+
+    # get final wall, empty cells.
+    wallCells = [(cell[0]+1, cell[1]+1) for cell in wallCells]
+    height, width = height + 2, width + 2
+    for i in range(height):
+        wallCells.append((i, 0))
+        wallCells.append((i, width-1))
+    for j in range(1, width-1):
+        wallCells.append((0, j))
+        wallCells.append((height-1, j))
+
+    # create maze string.
+    mazeString = ""
+    for i in range(height):
+        curRow = ""
+        for j in range(width):
+            if (i, j) in wallCells:
+                curRow += "%"
+            else:
+                curRow += " "
+        curRow += "\n"
+        mazeString += curRow
+
+    # write layout to file.
+    with open("layouts/{}Clean{}.lay".format(layoutSize, layoutIteration), "w") as file:
+        file.write(mazeString)
+        file.close()
+
+    print("clean layout generated for {}Clean{}.".format(layoutSize, layoutIteration))
+
 
 def generateCleanLayouts():
     """
-    remove foods, pacman from layout and create empty layout with walls.
+    generate Empty layouts for all layout sizes.
     """
-    for problem, layouts in _layouts.items():
-        for layout in layouts:
-            # read current layout.
-            file1 = open("layouts/{}.lay".format(layout), "r")
-            rows = file1.read().split("\n")
-            file1.close()
-
-            # remove pacman and food location.
-            cleanRows = []
-            for row in rows:
-                if len(row) > 0:
-                    cleanRow = ""
-                    for c in row:
-                        if c == '%':
-                            cleanRow += str(c)
-                        else:
-                            cleanRow += " "
-                    cleanRows.append(cleanRow)
-
-            # create clean layout.
-            file2 = open("layouts/{}Clean.lay".format(layout), "w")
-            s = ""
-            for cleanRow in cleanRows:
-                s += cleanRow
-                s += "\n"
-            file2.write(s)
-            file2.close()
+    for layoutSize, layoutDimensions in _layoutSizes.items():
+        for itr in range(_layoutCount):
+            generateNewLayout(layoutDimensions[0], layoutDimensions[1], layoutSize, itr)
 
 
 def generateFinalLayout(cleanLayout, finalLayout, pacmanPosition, foodPositions):
@@ -160,37 +215,41 @@ def generateAllLayouts():
     """
     generate all different layouts for the script.
     """
-    generateCleanLayouts()
 
     for problem in _problems:
         if problem == "PositionSearchProblem":
-            for layout in _layouts[problem]:
-                cleanLayout = layout + "Clean"
-                emptyCells = getEmptyCells(cleanLayout)
-                for itr in range(1, _itrCountPositionSearchProblem + 1):
-                    foodPositions = getFoodPositions(emptyCells, 1)
-                    pacmanPosition = getPacmanPosition(emptyCells, foodPositions)
-                    generateFinalLayout(cleanLayout, layout + str(itr), pacmanPosition, foodPositions)
+            for layout in _layouts:
+                for layoutCount in range(_layoutCount):
+                    cleanLayout = layout + "Clean" + str(layoutCount)
+                    emptyCells = getEmptyCells(cleanLayout)
+                    for itr in range(_itrCountPositionSearchProblem):
+                        foodPositions = getFoodPositions(emptyCells, 1)
+                        pacmanPosition = getPacmanPosition(emptyCells, foodPositions)
+                        generateFinalLayout(cleanLayout, layout + _layoutType[problem] + str(layoutCount) + "Itr" + str(itr), pacmanPosition, foodPositions)
 
         if problem == "CornersProblem":
-            for layout in _layouts[problem]:
-                cleanLayout = layout + "Clean"
-                emptyCells = getEmptyCells(cleanLayout)
-                foodPositions = getCornersProblemFoodPositions(layout)
-                for itr in range(1, _itrCountCornersProblem + 1):
-                    pacmanPosition = getPacmanPosition(emptyCells, foodPositions)
-                    generateFinalLayout(cleanLayout, layout + str(itr), pacmanPosition, foodPositions)
+            for layout in _layouts:
+                for layoutCount in range(_layoutCount):
+                    cleanLayout = layout + "Clean" + str(layoutCount)
+                    emptyCells = getEmptyCells(cleanLayout)
+                    foodPositions = getCornersProblemFoodPositions(cleanLayout)
+                    for itr in range(_itrCountCornersProblem):
+                        pacmanPosition = getPacmanPosition(emptyCells, foodPositions)
+                        generateFinalLayout(cleanLayout, layout + _layoutType[problem] + str(layoutCount) + "Itr" + str(itr), pacmanPosition, foodPositions)
 
         if problem == "FoodSearchProblem":
-            for layout in _layouts[problem]:
-                cleanLayout = layout + "Clean"
-                emptyCells = getEmptyCells(cleanLayout)
-                for itr in range(1, _itrCountFoodSearchProblem + 1):
-                    foodNumber = min(int(len(emptyCells)/5), _maxFoodCount, len(emptyCells)-1)
-                    for foodCount in range(2, foodNumber+1):
-                        foodPositions = getFoodPositions(emptyCells, foodCount)
-                        pacmanPosition = getPacmanPosition(emptyCells, foodPositions)
-                        generateFinalLayout(cleanLayout, layout + str(itr) + "_" + str(foodCount), pacmanPosition, foodPositions)
+            for layout in _layouts:
+                for layoutCount in range(_layoutCount):
+                    cleanLayout = layout + "Clean" + str(layoutCount)
+                    emptyCells = getEmptyCells(cleanLayout)
+                    for itr in range(_itrCountFoodSearchProblem):
+                        foodNumber = min(int(len(emptyCells)/5), _maxFoodCount, len(emptyCells)-1)
+                        for foodCount in range(2, foodNumber+1):
+                            foodPositions = getFoodPositions(emptyCells, foodCount)
+                            pacmanPosition = getPacmanPosition(emptyCells, foodPositions)
+                            generateFinalLayout(cleanLayout, layout + _layoutType[problem] + str(layoutCount) + "Itr" + str(itr) + "FoodCount" + str(foodCount), pacmanPosition, foodPositions)
+
+    print("filled clean mazes with food.")
 
 
 def runScript(layout, algorithm, problem):
@@ -252,47 +311,50 @@ def runAlgos():
 
     for problem in _problems:
         if problem == "PositionSearchProblem":
-            for layout in _layouts[problem]:
-                for algo in _algos:
-                    for itr in range(1, _itrCountPositionSearchProblem + 1):
-                        finalLayout = layout + str(itr)
-                        curResult = [layout, algo, itr]
-                        curResult.extend(runScript(finalLayout, algo, problem))
-                        resultsPositionSearchProblem.append(curResult)
-                        printProgress(problem, finalLayout, algo, itr)
+            for layout in _layouts:
+                for layoutCount in range(_layoutCount):
+                    for algo in _algos:
+                        for itr in range(_itrCountPositionSearchProblem):
+                            finalLayout = layout + _layoutType[problem] + str(layoutCount) + "Itr" + str(itr)
+                            curResult = [layout, layoutCount, algo, itr]
+                            curResult.extend(runScript(finalLayout, algo, problem))
+                            resultsPositionSearchProblem.append(curResult)
+                            printProgress(problem, finalLayout, algo, itr)
 
         if problem == "CornersProblem":
-            for layout in _layouts[problem]:
-                for algo in _algos:
-                    for itr in range(1, _itrCountCornersProblem + 1):
-                        finalLayout = layout + str(itr)
-                        curResult = [layout, algo, itr]
-                        curResult.extend(runScript(finalLayout, algo, problem))
-                        resultsCornersProblem.append(curResult)
-                        printProgress(problem, finalLayout, algo, itr)
+            for layout in _layouts:
+                for layoutCount in range(_layoutCount):
+                    for algo in _algos:
+                        for itr in range(_itrCountCornersProblem):
+                            finalLayout = layout + _layoutType[problem] + str(layoutCount) + "Itr" + str(itr)
+                            curResult = [layout, layoutCount, algo, itr]
+                            curResult.extend(runScript(finalLayout, algo, problem))
+                            resultsCornersProblem.append(curResult)
+                            printProgress(problem, finalLayout, algo, itr)
 
         if problem == "FoodSearchProblem":
-            for layout in _layouts[problem]:
-                cleanLayout = layout + "Clean"
-                emptyCells = getEmptyCells(cleanLayout)
-                for algo in _algos:
-                    for itr in range(1, _itrCountFoodSearchProblem + 1):
-                        foodNumber = min(int(len(emptyCells)/5), _maxFoodCount, len(emptyCells)-1)
-                        for foodCount in range(2, foodNumber+1):
-                            finalLayout = layout + str(itr) + "_" + str(foodCount)
-                            curResult = [layout, algo, itr, foodCount]
-                            curResult.extend(runScript(finalLayout, algo, problem))
-                            resultsFoodSearchProblem.append(curResult)
-                            printProgress(problem, finalLayout, algo, itr, foodCount)
+            for layout in _layouts:
+                for layoutCount in range(_layoutCount):
+                    cleanLayout = layout + "Clean" + str(layoutCount)
+                    emptyCells = getEmptyCells(cleanLayout)
+                    for algo in _algos:
+                        for itr in range(_itrCountFoodSearchProblem):
+                            foodNumber = min(int(len(emptyCells)/5), _maxFoodCount, len(emptyCells)-1)
+                            for foodCount in range(2, foodNumber+1):
+                                finalLayout = layout + _layoutType[problem] + str(layoutCount) + "Itr" + str(itr) + "FoodCount" + str(foodCount)
+                                curResult = [layout, layoutCount, algo, itr, foodCount]
+                                curResult.extend(runScript(finalLayout, algo, problem))
+                                resultsFoodSearchProblem.append(curResult)
+                                printProgress(problem, finalLayout, algo, itr, foodCount)
 
         # write results to csv file.
-        fieldsPositionSearchProblem = ["layout", "algorithm", "iteration", "cost", "expandedNodes", "score", "result"]
+        fieldsPositionSearchProblem = ["layout", "layoutCount", "algorithm", "iteration", "cost", "expandedNodes", "score", "result"]
         writeResults("results/positionalSearchProblemResults.csv", fieldsPositionSearchProblem, resultsPositionSearchProblem)
 
-        fieldsCornersProblem = ["layout", "algorithm", "iteration", "cost", "expandedNodes", "score", "result"]
+        fieldsCornersProblem = ["layout", "layoutCount", "algorithm", "iteration", "cost", "expandedNodes", "score", "result"]
         writeResults("results/cornersProblemResults.csv", fieldsCornersProblem, resultsCornersProblem)
 
-        fieldsFoodSearchProblem = ["layout", "algorithm", "iteration", "foodCount", "cost", "expandedNodes", "score", "result"]
+        fieldsFoodSearchProblem = ["layout", "layoutCount", "algorithm", "iteration", "foodCount", "cost", "expandedNodes", "score", "result"]
         writeResults("results/foodSearchProblemResults.csv", fieldsFoodSearchProblem, resultsFoodSearchProblem)
 
 
@@ -302,26 +364,31 @@ def removeGeneratedLayouts():
     """
     for problem in _problems:
         if problem == "PositionSearchProblem":
-            for layout in _layouts[problem]:
-                for itr in range(1, _itrCountPositionSearchProblem + 1):
-                    finalLayout = layout + str(itr)
-                    os.remove("layouts/{}.lay".format(finalLayout))
+            for layout in _layouts:
+                for layoutCount in range(_layoutCount):
+                    for itr in range(_itrCountPositionSearchProblem):
+                        finalLayout = layout + _layoutType[problem] + str(layoutCount) + "Itr" + str(itr)
+                        os.remove("layouts/{}.lay".format(finalLayout))
 
         if problem == "CornersProblem":
-            for layout in _layouts[problem]:
-                for itr in range(1, _itrCountCornersProblem + 1):
-                    finalLayout = layout + str(itr)
-                    os.remove("layouts/{}.lay".format(finalLayout))
+            for layout in _layouts:
+                for layoutCount in range(_layoutCount):
+                    for itr in range(_itrCountCornersProblem):
+                        finalLayout = layout + _layoutType[problem] + str(layoutCount) + "Itr" + str(itr)
+                        os.remove("layouts/{}.lay".format(finalLayout))
 
         if problem == "FoodSearchProblem":
-            for layout in _layouts[problem]:
-                cleanLayout = layout + "Clean"
-                emptyCells = getEmptyCells(cleanLayout)
-                for itr in range(1, _itrCountFoodSearchProblem + 1):
-                    foodNumber = min(int(len(emptyCells)/5), _maxFoodCount, len(emptyCells)-1)
-                    for foodCount in range(2, foodNumber + 1):
-                        finalLayout = layout + str(itr) + "_" + str(foodCount)
-                        os.remove("layouts/{}.lay".format(finalLayout))
+            for layout in _layouts:
+                for layoutCount in range(_layoutCount):
+                    cleanLayout = layout + "Clean" + str(layoutCount)
+                    emptyCells = getEmptyCells(cleanLayout)
+                    for itr in range(_itrCountFoodSearchProblem):
+                        foodNumber = min(int(len(emptyCells)/5), _maxFoodCount, len(emptyCells)-1)
+                        for foodCount in range(2, foodNumber + 1):
+                            finalLayout = layout + _layoutType[problem] + str(layoutCount) + "Itr" + str(itr) + "FoodCount" + str(foodCount)
+                            os.remove("layouts/{}.lay".format(finalLayout))
+
+    print("all generated layouts removed.")
 
 
 # script main method.
@@ -329,6 +396,11 @@ if __name__ == "__main__":
     """
     main method to run script.
     """
+
+    # generate clean layouts with no food or pacman.
+    # clean layout generation may take some time as we are
+    # randomly generating layouts and checking whether path exists or not.
+    generateCleanLayouts()
 
     # generate all layouts.
     generateAllLayouts()

@@ -320,25 +320,19 @@ def nullHeuristic(state, problem=None):
     return 0
 
 def manhattanDistance(startPos, endPos):
-    "The Manhattan distance between two points."
+    """
+    The Manhattan distance between two points.
+    """
+    print(startPos, endPos)
     return abs(startPos[0] - endPos[0]) + abs(startPos[1] - endPos[1])
-def aStarHeuristic(state, foodLocations):
+def manhattanHeuristic(curPos, goalPos):
     """
     A heuristic to get min manhattan distance from current state to
-    all remaining food locations.
+    goal state.
     """
-    hValue = 0
-
-    remFood = [copy.deepcopy(food) for food in foodLocations]
-    curLocation = state
-    while len(remFood) > 0:
-        distances = [(manhattanDistance(curLocation, food), food) for food in remFood]
-        distances = sorted(distances)
-        hValue += distances[0][0]
-        remFood.remove(distances[0][1])
-        curLocation = distances[0][1]
-
-    return hValue
+    if not curPos or not goalPos:
+        return float("inf")
+    return abs(curPos[0] - goalPos[0]) + abs(curPos[1] - goalPos[1])
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
@@ -350,14 +344,18 @@ def aStarSearch(problem, heuristic=nullHeuristic):
 
     exploredList = set()    # set to store explored nodes
 
-    fnValue = problem.getCostOfActionsForBds([])+aStarHeuristic(problem.getNextStartStateForBds(), problem.getRemainingGoals())  # Calculate f(n) value of the start node
+    startNode = problem.getNextStartStateForBds()
 
-    initialNode = (problem.getNextStartStateForBds(), [])
+    initialNode = (startNode, [])
+
+    # to initiate goal Node.
+    goalNode = problem.getNextGoalForBds()
+
+    fnValue = problem.getCostOfActionsForBds([])+manhattanHeuristic(startNode, goalNode)  # Calculate f(n) value of the start node
+
 
     frontierList.push(initialNode, fnValue)   # push initial node to frontier (node contains current state and path from root), priority is f(n) value
 
-    # to initate goal Node
-    nextGoalNode = problem.getNextGoalForBds()
 
     # to store all goals combined path.
     finalCombinedPath = list()
@@ -386,10 +384,11 @@ def aStarSearch(problem, heuristic=nullHeuristic):
             # reinstate all lists to get path to new goal.
             frontierList = PriorityQueue()
             exploredList = set()
-            initialNode = (problem.getNextStartStateForBds(), [])
-            fnValue = problem.getCostOfActionsForBds([])+aStarHeuristic(problem.getNextStartStateForBds(), problem.getRemainingGoals())
+            startNode = problem.getNextStartStateForBds()
+            initialNode = (startNode, [])
+            goalNode = problem.getNextGoalForBds()
+            fnValue = problem.getCostOfActionsForBds([])+manhattanHeuristic(startNode, goalNode)
             frontierList.push(initialNode, fnValue)
-            nextGoalNode = problem.getNextGoalForBds()
 
             # if all goals were found return combined path.
             if problem.isGoalStateForBds():
@@ -408,7 +407,7 @@ def aStarSearch(problem, heuristic=nullHeuristic):
 
                     childPath = curPath + [childNode[1]]    # find child node path
 
-                    childCost = problem.getCostOfActionsForBds(childPath)+aStarHeuristic(childNode[0], problem.getRemainingGoals()) # find child node f(n) value
+                    childCost = problem.getCostOfActionsForBds(childPath)+manhattanHeuristic(childNode[0], goalNode) # find child node f(n) value
 
                     newChildNode = (childNode[0], childPath)
 
@@ -420,11 +419,11 @@ def aStarSearch(problem, heuristic=nullHeuristic):
 
                     for frontierNode in frontierList.heap:  # find old cost of the child node
                         if frontierNode[2][0] == childNode[0]:  # check for the child node in frontier list
-                            oldCost = problem.getCostOfActionsForBds(frontierNode[2][1]) + aStarHeuristic(frontierNode[2][0], problem.getRemainingGoals())  # find it's cost
+                            oldCost = problem.getCostOfActionsForBds(frontierNode[2][1]) + manhattanHeuristic(frontierNode[2][0], goalNode)  # find it's cost
 
                     childPath = curPath + [childNode[1]]    # find child node path
 
-                    newCost = problem.getCostOfActionsForBds(childPath)+aStarHeuristic(childNode[0], problem.getRemainingGoals()) # find child node f(n) value
+                    newCost = problem.getCostOfActionsForBds(childPath)+manhattanHeuristic(childNode[0], goalNode) # find child node f(n) value
 
                     if oldCost > newCost:   # if new cost is better then old cost then update frontier node with new cost
                         frontierList.update((childNode[0], childPath), newCost)
@@ -616,6 +615,243 @@ def biDirectionalSearch(problem):
                         # push child node to visited list.
                         endVisitedList.append(childNode[0])
 
+
+def heuristicBiDirectionalSearch(problem):
+    """
+    Search the node that has the lowest combined cost and heuristic first. from both direction (from start node and goal node).
+    """
+
+    from util import PriorityQueue
+
+    # queue to store open nodes and expand based on FIFO from start node.
+    startFrontierList = PriorityQueue()
+
+    # set to store explored nodes from start node.
+    startExploredList = set()
+
+    # list to store nodes visited from start node.
+    startVisitedList = list()
+
+    startNode = problem.getNextStartStateForBds()
+
+    startInitialNode = (startNode, [])
+
+
+    # queue to store open nodes and expand based on FIFO from start node.
+    endFrontierList = PriorityQueue()
+
+    # set to store explored nodes from start node.
+    endExploredList = set()
+
+    # list to store nodes visited from start node.
+    endVisitedList = list()
+
+    goalNode = problem.getNextGoalForBds()
+
+    endInitialNode = (goalNode, [])
+
+    startFnValue = problem.getCostOfActionsForBds([]) + manhattanHeuristic(startNode, goalNode)
+
+    endFnValue = problem.getCostOfActionsForBds([]) + manhattanHeuristic(goalNode, startNode)
+
+    # push initial node to start frontier (node contains current state and path from root).
+    startFrontierList.push(startInitialNode, startFnValue)
+
+    # push initial node to end frontier (node contains current state and path from root).
+    endFrontierList.push(endInitialNode, endFnValue)
+
+    # to store all goals combined path.
+    finalCombinedPath = list()
+
+    # iterate till we find the goal noad or get exhaust.
+    while True:
+
+        # if both frontiers are empty, then goal node is not found, so return null path.
+        if startFrontierList.isEmpty() and endFrontierList.isEmpty():
+            return []
+
+        # if start frontier is not empty expand it.
+        if not startFrontierList.isEmpty():
+
+            # take out top node from the frontier list.
+            frontierNode = startFrontierList.pop()
+
+            curNode = frontierNode[0]
+
+            curPath = frontierNode[1]
+
+            # expanded nodes are added to the explored list.
+            startExploredList.add(curNode)
+
+            # if current node is in end visited list then we can combine both path to get final path.
+            if curNode in endVisitedList:
+
+                # find curNode in end frontier list.
+                while not endFrontierList.isEmpty():
+
+                    (endCurNode, endCurPath) = endFrontierList.pop()
+
+                    # if we got the matching node append paths.
+                    if endCurNode == curNode:
+
+                        # reverse end node's path and get final path by combining both paths.
+                        finalPath = curPath + reverseDirections(endCurPath[::-1])
+
+                        # add current goal path to final combined path.
+                        finalCombinedPath.extend(finalPath)
+
+                        # reinstate all lists to get path to new goal.
+                        startFrontierList = PriorityQueue()
+                        startExploredList = set()
+                        startVisitedList = list()
+                        startNode = problem.getNextStartStateForBds()
+                        startInitialNode = (startNode, [])
+                        endFrontierList = PriorityQueue()
+                        endExploredList = set()
+                        endVisitedList = list()
+                        goalNode = problem.getNextGoalForBds()
+                        endInitialNode = (goalNode, [])
+                        startFnValue = problem.getCostOfActionsForBds([]) + manhattanHeuristic(startNode, goalNode)
+                        endFnValue = problem.getCostOfActionsForBds([]) + manhattanHeuristic(goalNode, startNode)
+                        startFrontierList.push(startInitialNode, startFnValue)
+                        endFrontierList.push(endInitialNode, endFnValue)
+
+                        # if all goals were found return combined path.
+                        if problem.isGoalStateForBds():
+                            return finalCombinedPath
+
+                        else:
+                            break
+
+            # else visit current node's successors (children nodes)
+            else:
+
+                curNodeScucessors = problem.getSuccessorsForBds(curNode)
+
+                for childNode in curNodeScucessors:
+
+                    # in case the successor node is not explored and is not in frontier list.
+                    if childNode[0] not in startExploredList:
+                        # find path to child node.
+                        childPath = curPath + [childNode[1]]
+
+                        childCost = problem.getCostOfActionsForBds(childPath)+manhattanHeuristic(childNode[0], goalNode)
+
+                        newChildNode = (childNode[0], childPath)
+
+                        # push child node to frontier.
+                        startFrontierList.push(newChildNode, childCost)
+
+                        # push child node to visited list.
+                        startVisitedList.append(childNode[0])
+
+                    elif childNode[0] not in startExploredList and childNode[0] in (frontierNode[2][0] for frontierNode in startFrontierList.heap):
+
+                        oldCost = 0
+                        for frontierNode in startFrontierList.heap:  # find old cost of the child node
+                            if frontierNode[2][0] == childNode[0]:  # check for the child node in frontier list
+                                oldCost = problem.getCostOfActionsForBds(frontierNode[2][1]) + manhattanHeuristic(
+                                    frontierNode[2][0], goalNode)  # find it's cost
+
+                        childPath = curPath + [childNode[1]]  # find child node path
+
+                        newCost = problem.getCostOfActionsForBds(childPath) + manhattanHeuristic(childNode[0], goalNode)  # find child node f(n) value
+
+                        if oldCost > newCost:
+                            startFrontierList.update((childNode[0], childPath), newCost)
+
+        # if end frontier is not empty expand it.
+        if not endFrontierList.isEmpty():
+
+            # take out top node from the frontier list.
+            frontierNode = endFrontierList.pop()
+
+            curNode = frontierNode[0]
+
+            curPath = frontierNode[1]
+
+            # expanded nodes are added to the explored list.
+            endExploredList.add(curNode)
+
+            # if current node is in start visited list then we can combine both path to get final path.
+            if curNode in startVisitedList:
+
+                # find curNode in end frontier
+                while not startFrontierList.isEmpty():
+
+                    (startCurNode, startCurPath) = startFrontierList.pop()
+
+                    # if we got the matching node append paths.
+                    if startCurNode == curNode:
+
+                        # reverse end node's path.
+                        curPath.reverse()
+
+                        # get final path by combining both paths.
+                        finalPath = startCurPath + reverseDirections(curPath)
+
+                        # add current goal path to final combined path.
+                        finalCombinedPath.extend(finalPath)
+
+                        # reinstate all lists to get path to new goal.
+                        startFrontierList = PriorityQueue()
+                        startExploredList = set()
+                        startVisitedList = list()
+                        startNode = problem.getNextStartStateForBds()
+                        startInitialNode = (startNode, [])
+                        endFrontierList = PriorityQueue()
+                        endExploredList = set()
+                        endVisitedList = list()
+                        goalNode = problem.getNextGoalForBds()
+                        endInitialNode = (goalNode, [])
+                        startFnValue = problem.getCostOfActionsForBds([]) + manhattanHeuristic(startNode, goalNode)
+                        endFnValue = problem.getCostOfActionsForBds([]) + manhattanHeuristic(goalNode, startNode)
+                        startFrontierList.push(startInitialNode, startFnValue)
+                        endFrontierList.push(endInitialNode, endFnValue)
+
+                        # if all goals are covered, return combined path.
+                        if problem.isGoalStateForBds():
+                            return finalCombinedPath
+                        else:
+                            break
+
+            # else visit current node's successors (children nodes)
+            else:
+
+                curNodeScucessors = problem.getSuccessorsForBds(curNode)
+
+                for childNode in curNodeScucessors:
+
+                    # in case the successor node is not explored and is not in frontier list.
+                    if childNode[0] not in endExploredList:
+                        # find path to child node.
+                        childPath = curPath + [childNode[1]]
+
+                        childCost = problem.getCostOfActionsForBds(childPath) + manhattanHeuristic(childNode[0], startNode)
+
+                        newChildNode = (childNode[0], childPath)
+
+                        # push child node to frontier.
+                        endFrontierList.push(newChildNode, childCost)
+
+                        # push child node to visited list.
+                        endVisitedList.append(childNode[0])
+
+                    elif childNode[0] not in endExploredList and childNode[0] in (frontierNode[2][0] for frontierNode in endFrontierList.heap):
+
+                        oldCost = 0
+                        for frontierNode in endFrontierList.heap:  # find old cost of the child node
+                            if frontierNode[2][0] == childNode[0]:  # check for the child node in frontier list
+                                oldCost = problem.getCostOfActionsForBds(frontierNode[2][1]) + manhattanHeuristic(
+                                    frontierNode[2][0], goalNode)  # find it's cost
+
+                        childPath = curPath + [childNode[1]]  # find child node path
+
+                        newCost = problem.getCostOfActionsForBds(childPath) + manhattanHeuristic(childNode[0], startNode)  # find child node f(n) value
+
+                        if oldCost > newCost:
+                            endFrontierList.update((childNode[0], childPath), newCost)
+
 def reverseDirections(directions):
     """Reverses the directions from goal node to current node."""
 
@@ -643,3 +879,4 @@ dfs = depthFirstSearch
 astar = aStarSearch
 ucs = uniformCostSearch
 bds = biDirectionalSearch
+hbds = heuristicBiDirectionalSearch

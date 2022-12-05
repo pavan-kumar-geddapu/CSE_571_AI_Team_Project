@@ -25,12 +25,19 @@ ucs = uniformCostSearch
 
 bds = biDirectionalSearch
 
+hbds = heuristicBiDirectionalSearch
+
 ### Individual Run commands
 These are similar to individual project commands.
 
 Example command for bi-directional search.
 ```bash
 python pacman.py -l mediumMaze -p SearchAgent -a fn=bds
+```
+
+Example command for heuristic bi-directional search.
+```bash
+python pacman.py -l mediumMaze -p SearchAgent -a fn=hbds
 ```
 
 

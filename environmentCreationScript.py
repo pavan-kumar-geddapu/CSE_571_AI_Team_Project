@@ -3,6 +3,9 @@ import csv
 import os
 import subprocess
 import random
+import numpy as np
+import pandas
+import scipy.stats as stats
 
 
 _itrCountPositionSearchProblem = 10
@@ -17,6 +20,9 @@ _layoutWallCount = {"tiny": 20, "small": 50, "medium": 100, "big": 125}
 _layoutType = {"PositionSearchProblem": "Maze", "CornersProblem": "Corners", "FoodSearchProblem": "Search"}
 _problems = ["PositionSearchProblem", "CornersProblem", "FoodSearchProblem"]
 
+dataGroups = {"PositionSearchProblem": {}, "CornersProblem": {}, "FoodSearchProblem": {}}
+tStats_hbds = {}
+tStats_bds = {}
 
 def isPathAvailable(emptyCells, wallCells, height, width):
     """
@@ -346,13 +352,13 @@ def runAlgos():
 
         # write results to csv file.
         fieldsPositionSearchProblem = ["layout", "layoutCount", "algorithm", "iteration", "cost", "expandedNodes", "score", "result"]
-        writeResults("results/positionalSearchProblemResults.csv", fieldsPositionSearchProblem, resultsPositionSearchProblem)
+        writeResults("results/PositionSearchProblemResults.csv", fieldsPositionSearchProblem, resultsPositionSearchProblem)
 
         fieldsCornersProblem = ["layout", "layoutCount", "algorithm", "iteration", "cost", "expandedNodes", "score", "result"]
-        writeResults("results/cornersProblemResults.csv", fieldsCornersProblem, resultsCornersProblem)
+        writeResults("results/CornersProblemResults.csv", fieldsCornersProblem, resultsCornersProblem)
 
         fieldsFoodSearchProblem = ["layout", "layoutCount", "algorithm", "iteration", "foodCount", "cost", "expandedNodes", "score", "result"]
-        writeResults("results/foodSearchProblemResults.csv", fieldsFoodSearchProblem, resultsFoodSearchProblem)
+        writeResults("results/FoodSearchProblemResults.csv", fieldsFoodSearchProblem, resultsFoodSearchProblem)
 
 
 def removeGeneratedLayouts():
@@ -388,6 +394,52 @@ def removeGeneratedLayouts():
     print("all generated layouts removed.")
 
 
+def runTTtest():
+    # calculate mean and std.dev for the data by grouping them by size and algorithm, perform t-test for different algorithms of the same layout
+    for problem in _problems:
+        df = pandas.read_csv("results/" + problem + "Results.csv", usecols=["layout", "algorithm", "expandedNodes"])
+        arr = df.to_numpy()
+        for row in arr:
+            if (row[0], row[1]) not in dataGroups[problem]:
+                dataGroups[problem][(row[0], row[1])] = [row[2]]
+            else:
+                dataGroups[problem][(row[0], row[1])].append(row[2])
+
+        # Indpendent T-Test heuristic MM with all other algorithms
+        tpvalues = {}
+        for layout in _layouts:
+            data2 = np.array(dataGroups[problem][(layout, "hbds")])
+            for algo in _algos:
+                if algo != "hbds":
+                    data1 = np.array(dataGroups[problem][(layout, algo)])
+                    statistic = stats.ttest_rel(a=data1, b=data2)
+                    tpvalues[(layout, algo)] = (statistic[0], statistic[1])
+        tStats_hbds[problem] = tpvalues
+        csvResults = []
+        for key, value in tStats_hbds[problem].items():
+            temp = [key[0], key[1], value[0], value[1]]
+            csvResults.append(temp)
+        fields = ["layoutSize", "algorithm", "t-value", "p-value"]
+        writeResults("results/" + problem + "hbdsTTestValues.csv", fields, csvResults)
+
+        # Indpendent T-Test MM(0) with all other algorithms
+        tpvalues_bds = {}
+        for layout in _layouts:
+            data2 = np.array(dataGroups[problem][(layout, "bds")])
+            for algo in _algos:
+                if algo != "bds":
+                    data1 = np.array(dataGroups[problem][(layout, algo)])
+                    statistic = stats.ttest_rel(a=data1, b=data2)
+                    tpvalues_bds[(layout, algo)] = (statistic[0], statistic[1])
+        tStats_bds[problem] = tpvalues_bds
+        csvResults_bds = []
+        for key, value in tStats_bds[problem].items():
+            temp = [key[0], key[1], value[0], value[1]]
+            csvResults_bds.append(temp)
+        fields = ["layoutSize", "algorithm", "t-value", "p-value"]
+        writeResults("results/" + problem + "bdsTTestValues.csv", fields, csvResults_bds)
+    print("TStats Writing Done")
+
 # script main method.
 if __name__ == "__main__":
     """
@@ -407,3 +459,6 @@ if __name__ == "__main__":
 
     # remove all generated layouts.
     removeGeneratedLayouts()
+
+    # run paired t-test for different pairs of algorithms
+    runTTtest()

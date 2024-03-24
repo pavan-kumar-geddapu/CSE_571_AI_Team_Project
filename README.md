@@ -1,4 +1,7 @@
-# CSE 571 AI Team Project
+# Autonomous Pacman: AI-Powered Self-Learning Maze Navigator
+
+## CSE 571 Artificial Intelligence
+Created an AI-based Pacman game utilizing search algorithms and reinforcement learning, enabling the agent to autonomously learn from its environment and find paths in complex mazes
 
 ## Topic: Bi-directional Search
 
